@@ -13,7 +13,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Íconos personalizados según tipo de marcador
 const icons = {
   tecnico: L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/1037/1037762.png',
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/4712/4712102.png',
     iconSize: [32, 32],
   }),
   casa: L.icon({
@@ -21,7 +21,7 @@ const icons = {
     iconSize: [28, 28],
   }),
   local: L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/535/535239.png',
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149060.png',
     iconSize: [28, 28],
   }),
 };
@@ -71,8 +71,12 @@ function renderizarTecnicosFiltrados(filtro) {
 
     li.innerHTML = `
       <strong>${t.nombre}</strong><br/>
-      <div class="info">${t.especialidad} – ETA: ?</div>
-      <div class="estado">${t.estado === "disponible" ? "✅ Disponible" : "⛔ Ocupado"}</div>
+      <div class="info">
+        ${obtenerIconoEspecialidad(t.especialidad)} ${t.especialidad} – ETA: ?
+      </div>
+      <div class="estado ${t.estado === "disponible" ? "disponible" : "ocupado"}">
+        ${t.estado === "disponible" ? "Disponible" : "Ocupado"}
+      </div>
     `;
 
     lista.appendChild(li);
@@ -109,9 +113,9 @@ function mostrarUbicacionUsuario() {
       const marker = L.marker([lat, lon], {
         title: "Tu ubicación",
         icon: L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
-          iconSize: [30, 30],
-        }),
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/4879/4879375.png",
+        iconSize: [28, 28],
+      }),
       }).addTo(map);
 
       marker.bindPopup("📍 Tú estás aquí").openPopup();
@@ -213,3 +217,11 @@ document.getElementById("asignar-cercano").addEventListener("click", () => {
     alert("No hay técnicos disponibles actualmente.");
   }
 });
+
+function obtenerIconoEspecialidad(especialidad) {
+  const tipo = especialidad.toLowerCase();
+  if (tipo.includes("instalacion")) return "🔌";
+  if (tipo.includes("soporte")) return "🛠️";
+  if (tipo.includes("levantamiento")) return "📡";
+  return "👤";
+}
