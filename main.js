@@ -1,16 +1,16 @@
-// Coordenadas de ejemplo (Concepción, Chile)
+// Coordenadas iniciales (ejemplo: Concepción, Chile)
 const inicialLat = -36.82;
 const inicialLon = -73.05;
 
-// Inicializa el mapa
+// Inicializa el mapa centrado en la ubicación inicial
 const map = L.map('map').setView([inicialLat, inicialLon], 13);
 
-// Carga capa base de OpenStreetMap
+// Agrega capa base de OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Íconos personalizados
+// Íconos personalizados según tipo de marcador
 const icons = {
   tecnico: L.icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/1037/1037762.png',
@@ -26,7 +26,7 @@ const icons = {
   }),
 };
 
-// Función para cargar y mostrar marcadores
+// Carga y dibuja marcadores de tipo indicado desde archivo JSON
 async function cargarMarcadores(tipo, archivo) {
   const response = await fetch(`data/${archivo}`);
   const datos = await response.json();
@@ -39,23 +39,32 @@ async function cargarMarcadores(tipo, archivo) {
   });
 }
 
-// Cargar los tres tipos de datos
+// Cargar marcadores de técnicos, casas y locales
 cargarMarcadores("tecnico", "tecnicos.json");
 cargarMarcadores("casa", "casas.json");
 cargarMarcadores("local", "locales.json");
 
-let tecnicosGlobal = []; // Para filtrado posterior
+// Array global para almacenar técnicos y filtrar después
+let tecnicosGlobal = [];
 
-async function cargarTecnicosPanel() {
-  const res = await fetch("data/tecnicos.json");
-  const data = await res.json();
-  tecnicosGlobal = data;
+// Escucha el cambio en el selector de tipo de servicio y aplica filtro
+document.getElementById("filtro-servicio").addEventListener("change", (e) => {
+  const filtro = e.target.value;
+  renderizarTecnicosFiltrados(filtro);
+});
 
+// Renderiza lista de técnicos según filtro por especialidad
+function renderizarTecnicosFiltrados(filtro) {
   const lista = document.getElementById("lista-tecnicos");
   const total = document.getElementById("total-tecnicos");
   lista.innerHTML = "";
 
-  data.forEach((t) => {
+  const tecnicosFiltrados = tecnicosGlobal.filter((t) => {
+    if (filtro === "todos") return true;
+    return t.especialidad.toLowerCase() === filtro.toLowerCase();
+  });
+
+  tecnicosFiltrados.forEach((t) => {
     const li = document.createElement("li");
     li.classList.add("tecnico-item");
     li.dataset.nombre = t.nombre;
@@ -69,12 +78,22 @@ async function cargarTecnicosPanel() {
     lista.appendChild(li);
   });
 
-  total.textContent = `(${data.length})`;
+  total.textContent = `(${tecnicosFiltrados.length})`;
+}
+
+// Carga los técnicos al iniciar y muestra todos
+async function cargarTecnicosPanel() {
+  const res = await fetch("data/tecnicos.json");
+  const data = await res.json();
+  tecnicosGlobal = data;
+
+  // Renderiza todos los técnicos por defecto
+  renderizarTecnicosFiltrados("todos");
 }
 
 cargarTecnicosPanel();
 
-
+// Detecta ubicación del usuario con geolocalización del navegador
 function mostrarUbicacionUsuario() {
   if (!navigator.geolocation) {
     alert("La geolocalización no es compatible con este navegador.");
@@ -86,7 +105,7 @@ function mostrarUbicacionUsuario() {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
 
-      // Marcador personalizado (puedes reemplazar el ícono si quieres)
+      // Agrega marcador de usuario en el mapa
       const marker = L.marker([lat, lon], {
         title: "Tu ubicación",
         icon: L.icon({
@@ -97,10 +116,10 @@ function mostrarUbicacionUsuario() {
 
       marker.bindPopup("📍 Tú estás aquí").openPopup();
 
-      // Opcional: centrar mapa
+      // Centra el mapa en la ubicación del usuario
       map.setView([lat, lon], 14);
 
-      // Guardar coordenadas globales para cálculos
+      // Guarda posición global para cálculos posteriores
       usuarioPosicion = { lat, lon };
     },
     (err) => {
@@ -110,25 +129,28 @@ function mostrarUbicacionUsuario() {
   );
 }
 
+// Variable global para guardar coordenadas del usuario
 let usuarioPosicion = null;
 
+// Llama la función al cargar
 mostrarUbicacionUsuario();
 
-
+// Calcula distancia entre dos coordenadas (km) con fórmula de Haversine
 function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * Math.PI / 180) *
     Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.sin(dLon / 2) ** 2;
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
+// Al hacer clic en "Asignar técnico cercano", encuentra el más próximo
 document.getElementById("asignar-cercano").addEventListener("click", () => {
   if (!usuarioPosicion) {
     alert("Primero se debe obtener tu ubicación.");
@@ -138,6 +160,7 @@ document.getElementById("asignar-cercano").addEventListener("click", () => {
   let tecnicoMasCercano = null;
   let distanciaMinima = Infinity;
 
+  // Buscar técnico disponible más cercano
   tecnicosGlobal.forEach((t) => {
     if (t.estado !== "disponible") return;
 
@@ -156,18 +179,20 @@ document.getElementById("asignar-cercano").addEventListener("click", () => {
   });
 
   if (tecnicoMasCercano) {
-    const tiempoEstimado = Math.ceil(distanciaMinima / 0.5); // Suponemos 30 km/h
+    const tiempoEstimado = Math.ceil(distanciaMinima / 0.5); // Suponiendo 30 km/h
+
     alert(
       `Técnico más cercano: ${tecnicoMasCercano.nombre}\nDistancia: ${distanciaMinima.toFixed(
         2
       )} km\nETA: ${tiempoEstimado} min`
     );
-    // Quitar cualquier asignación previa
+
+    // Quitar selección previa
     document.querySelectorAll(".tecnico-item").forEach(el => {
       el.classList.remove("asignado");
     });
 
-    // Marcar el técnico más cercano
+    // Resaltar al técnico asignado
     const lista = document.querySelectorAll("#lista-tecnicos .tecnico-item");
     lista.forEach(el => {
       if (el.dataset.nombre === tecnicoMasCercano.nombre) {
@@ -176,11 +201,10 @@ document.getElementById("asignar-cercano").addEventListener("click", () => {
       }
     });
 
-
-    // Reenfocar mapa
+    // Centrar mapa en técnico
     map.setView([tecnicoMasCercano.lat, tecnicoMasCercano.lon], 15);
 
-    // Mostrar popup en mapa
+    // Mostrar popup con nombre y ETA
     L.popup()
       .setLatLng([tecnicoMasCercano.lat, tecnicoMasCercano.lon])
       .setContent(`🧑‍🔧 ${tecnicoMasCercano.nombre}<br>ETA: ${tiempoEstimado} min`)
