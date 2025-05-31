@@ -12,9 +12,29 @@
     <h1>Dashboard Operador - GeoFinder</h1>
   </header>
 
-  <main>
-    <div id="map"></div>
-  </main>
+  <main class="contenedor">
+  <div id="map"></div>
+
+  <aside id="panel-tecnicos">
+    <div class="panel-header">
+      <h2>Técnicos Disponibles <span id="total-tecnicos">(0)</span></h2>
+
+      <label for="filtro-servicio">Filtrar por tipo de servicio</label>
+      <select id="filtro-servicio">
+        <option value="todos">Todos los servicios</option>
+        <option value="instalacion">Instalación</option>
+        <option value="soporte">Soporte</option>
+        <option value="levantamiento">Levantamiento</option>
+      </select>
+
+      <button id="asignar-cercano">🔍 Asignar Técnico Más Cercano</button>
+    </div>
+
+    <ul id="lista-tecnicos">
+      <!-- Aquí se insertarán dinámicamente -->
+    </ul>
+  </aside>
+</main>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="main.js"></script>

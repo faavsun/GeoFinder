@@ -43,3 +43,32 @@ async function cargarMarcadores(tipo, archivo) {
 cargarMarcadores("tecnico", "tecnicos.json");
 cargarMarcadores("casa", "casas.json");
 cargarMarcadores("local", "locales.json");
+
+let tecnicosGlobal = []; // Para filtrado posterior
+
+async function cargarTecnicosPanel() {
+  const res = await fetch("data/tecnicos.json");
+  const data = await res.json();
+  tecnicosGlobal = data;
+
+  const lista = document.getElementById("lista-tecnicos");
+  const total = document.getElementById("total-tecnicos");
+  lista.innerHTML = "";
+
+  data.forEach((t) => {
+    const li = document.createElement("li");
+    li.classList.add("tecnico-item");
+
+    li.innerHTML = `
+      <strong>${t.nombre}</strong><br/>
+      <div class="info">${t.especialidad} – ETA: ?</div>
+      <div class="estado">${t.estado === "disponible" ? "✅ Disponible" : "⛔ Ocupado"}</div>
+    `;
+
+    lista.appendChild(li);
+  });
+
+  total.textContent = `(${data.length})`;
+}
+
+cargarTecnicosPanel();

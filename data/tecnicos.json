@@ -1,4 +1,30 @@
 [
-  { "nombre": "Juan Pérez", "lat": -36.821, "lon": -73.047 },
-  { "nombre": "Ana Rojas", "lat": -36.825, "lon": -73.052 }
+  {
+    "nombre": "Carlos Mendoza",
+    "lat": -36.821,
+    "lon": -73.048,
+    "especialidad": "Instalación",
+    "estado": "disponible"
+  },
+  {
+    "nombre": "Ana García",
+    "lat": -36.825,
+    "lon": -73.053,
+    "especialidad": "Soporte",
+    "estado": "disponible"
+  },
+  {
+    "nombre": "Miguel Torres",
+    "lat": -36.818,
+    "lon": -73.054,
+    "especialidad": "Levantamiento",
+    "estado": "disponible"
+  },
+  {
+    "nombre": "Laura Ruiz",
+    "lat": -36.816,
+    "lon": -73.049,
+    "especialidad": "Instalación",
+    "estado": "ocupado"
+  }
 ]
