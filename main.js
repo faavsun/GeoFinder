@@ -58,6 +58,7 @@ async function cargarTecnicosPanel() {
   data.forEach((t) => {
     const li = document.createElement("li");
     li.classList.add("tecnico-item");
+    li.dataset.nombre = t.nombre;
 
     li.innerHTML = `
       <strong>${t.nombre}</strong><br/>
@@ -72,3 +73,119 @@ async function cargarTecnicosPanel() {
 }
 
 cargarTecnicosPanel();
+
+
+function mostrarUbicacionUsuario() {
+  if (!navigator.geolocation) {
+    alert("La geolocalización no es compatible con este navegador.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      // Marcador personalizado (puedes reemplazar el ícono si quieres)
+      const marker = L.marker([lat, lon], {
+        title: "Tu ubicación",
+        icon: L.icon({
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+          iconSize: [30, 30],
+        }),
+      }).addTo(map);
+
+      marker.bindPopup("📍 Tú estás aquí").openPopup();
+
+      // Opcional: centrar mapa
+      map.setView([lat, lon], 14);
+
+      // Guardar coordenadas globales para cálculos
+      usuarioPosicion = { lat, lon };
+    },
+    (err) => {
+      alert("No se pudo obtener tu ubicación.");
+      console.error(err);
+    }
+  );
+}
+
+let usuarioPosicion = null;
+
+mostrarUbicacionUsuario();
+
+
+function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+document.getElementById("asignar-cercano").addEventListener("click", () => {
+  if (!usuarioPosicion) {
+    alert("Primero se debe obtener tu ubicación.");
+    return;
+  }
+
+  let tecnicoMasCercano = null;
+  let distanciaMinima = Infinity;
+
+  tecnicosGlobal.forEach((t) => {
+    if (t.estado !== "disponible") return;
+
+    const distancia = calcularDistanciaKm(
+      usuarioPosicion.lat,
+      usuarioPosicion.lon,
+      t.lat,
+      t.lon
+    );
+
+    t.distancia = distancia;
+    if (distancia < distanciaMinima) {
+      distanciaMinima = distancia;
+      tecnicoMasCercano = t;
+    }
+  });
+
+  if (tecnicoMasCercano) {
+    const tiempoEstimado = Math.ceil(distanciaMinima / 0.5); // Suponemos 30 km/h
+    alert(
+      `Técnico más cercano: ${tecnicoMasCercano.nombre}\nDistancia: ${distanciaMinima.toFixed(
+        2
+      )} km\nETA: ${tiempoEstimado} min`
+    );
+    // Quitar cualquier asignación previa
+    document.querySelectorAll(".tecnico-item").forEach(el => {
+      el.classList.remove("asignado");
+    });
+
+    // Marcar el técnico más cercano
+    const lista = document.querySelectorAll("#lista-tecnicos .tecnico-item");
+    lista.forEach(el => {
+      if (el.dataset.nombre === tecnicoMasCercano.nombre) {
+        el.classList.add("asignado");
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+
+
+    // Reenfocar mapa
+    map.setView([tecnicoMasCercano.lat, tecnicoMasCercano.lon], 15);
+
+    // Mostrar popup en mapa
+    L.popup()
+      .setLatLng([tecnicoMasCercano.lat, tecnicoMasCercano.lon])
+      .setContent(`🧑‍🔧 ${tecnicoMasCercano.nombre}<br>ETA: ${tiempoEstimado} min`)
+      .openOn(map);
+  } else {
+    alert("No hay técnicos disponibles actualmente.");
+  }
+});

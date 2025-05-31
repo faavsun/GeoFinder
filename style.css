@@ -66,3 +66,8 @@ header {
   margin-top: 5px;
   color: green;
 }
+
+.tecnico-item.asignado {
+  border: 2px solid #00c853;
+  background-color: #e8f5e9;
+}
