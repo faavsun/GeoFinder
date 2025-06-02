@@ -9,33 +9,38 @@
 </head>
 <body>
   <header>
-    <h1>Dashboard Operador - GeoFinder</h1>
+    <h1>📍 GeoFinder Operador</h1>
   </header>
 
-  <main class="contenedor">
-  <div id="map"></div>
+  <main style="display: flex; height: calc(100vh - 80px);">
+    
+    <!-- Panel lateral -->
+    <aside id="panel-tecnicos" class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">👷 Técnicos Disponibles <span id="total-tecnicos">(0)</span></h2>
 
-  <aside id="panel-tecnicos">
-    <div class="panel-header">
-      <h2>Técnicos Disponibles <span id="total-tecnicos">(0)</span></h2>
+        <label for="filtro-servicio" class="dropdown-label">Filtrar por tipo de servicio</label>
+        <select id="filtro-servicio" class="dropdown">
+          <option value="todos">Todos los servicios</option>
+          <option value="instalacion">Instalación</option>
+          <option value="soporte">Soporte</option>
+          <option value="levantamiento">Levantamiento</option>
+        </select>
 
-      <label for="filtro-servicio">Filtrar por tipo de servicio</label>
-      <select id="filtro-servicio">
-        <option value="todos">Todos los servicios</option>
-        <option value="instalacion">Instalación</option>
-        <option value="soporte">Soporte</option>
-        <option value="levantamiento">Levantamiento</option>
-      </select>
+        <button id="asignar-cercano" class="btn-asignar">🔍 Asignar Técnico Más Cercano</button>
+      </div>
 
-      <button id="asignar-cercano">🔍 Asignar Técnico Más Cercano</button>
-    </div>
+      <ul id="lista-tecnicos" class="tecnico-lista">
+        <!-- Lista dinámica -->
+      </ul>
+    </aside>
 
-    <ul id="lista-tecnicos">
-      <!-- Aquí se insertarán dinámicamente -->
-    </ul>
-  </aside>
-</main>
+    <!-- Mapa -->
+    <div id="map" style="flex: 1;"></div>
 
+  </main>
+
+  <!-- JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="main.js"></script>
 </body>
