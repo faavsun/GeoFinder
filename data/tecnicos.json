@@ -3,7 +3,7 @@
     "nombre": "Carlos Mendoza",
     "lat": -36.821,
     "lon": -73.048,
-    "especialidad": "Instalación",
+    "especialidad": "Instalacion",
     "estado": "disponible"
   },
   {
@@ -24,7 +24,7 @@
     "nombre": "Laura Ruiz",
     "lat": -36.816,
     "lon": -73.049,
-    "especialidad": "Instalación",
+    "especialidad": "Instalacion",
     "estado": "ocupado"
   }
 ]

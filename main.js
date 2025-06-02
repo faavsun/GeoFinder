@@ -65,18 +65,26 @@ function renderizarTecnicosFiltrados(filtro) {
   });
 
   tecnicosFiltrados.forEach((t) => {
+    let etaTexto = "ETA: ?";
+    if (usuarioPosicion) {
+      const distancia = calcularDistanciaKm(
+        usuarioPosicion.lat,
+        usuarioPosicion.lon,
+        t.lat,
+        t.lon
+      );
+      const eta = Math.ceil(distancia / 0.5); // Asumiendo 30 km/h
+      etaTexto = `ETA: ${eta} min`;
+    }
+
     const li = document.createElement("li");
     li.classList.add("tecnico-item");
     li.dataset.nombre = t.nombre;
 
     li.innerHTML = `
       <strong>${t.nombre}</strong><br/>
-      <div class="info">
-        ${obtenerIconoEspecialidad(t.especialidad)} ${t.especialidad} – ETA: ?
-      </div>
-      <div class="estado ${t.estado === "disponible" ? "disponible" : "ocupado"}">
-        ${t.estado === "disponible" ? "Disponible" : "Ocupado"}
-      </div>
+      <div class="info">${t.especialidad} – ${etaTexto}</div>
+      <div class="estado">${t.estado === "disponible" ? "✅ Disponible" : "⛔ Ocupado"}</div>
     `;
 
     lista.appendChild(li);
@@ -91,11 +99,34 @@ async function cargarTecnicosPanel() {
   const data = await res.json();
   tecnicosGlobal = data;
 
-  // Renderiza todos los técnicos por defecto
-  renderizarTecnicosFiltrados("todos");
+  const lista = document.getElementById("lista-tecnicos");
+  const total = document.getElementById("total-tecnicos");
+  lista.innerHTML = "";
+
+  data.forEach((t) => {
+    let etaTexto = "ETA: ?";
+    if (usuarioPosicion) {
+      const distancia = calcularDistanciaKm(usuarioPosicion.lat, usuarioPosicion.lon, t.lat, t.lon);
+      const eta = Math.ceil(distancia / 0.5); // Asumiendo velocidad promedio de 30 km/h
+      etaTexto = `ETA: ${eta} min`;
+    }
+
+    const li = document.createElement("li");
+    li.classList.add("tecnico-item");
+    li.dataset.nombre = t.nombre;
+
+    li.innerHTML = `
+      <strong>${t.nombre}</strong><br/>
+      <div class="info">${t.especialidad} – ${etaTexto}</div>
+      <div class="estado">${t.estado === "disponible" ? "✅ Disponible" : "⛔ Ocupado"}</div>
+    `;
+
+    lista.appendChild(li);
+  });
+
+  total.textContent = `(${data.length})`;
 }
 
-cargarTecnicosPanel();
 
 // Detecta ubicación del usuario con geolocalización del navegador
 function mostrarUbicacionUsuario() {
@@ -125,6 +156,7 @@ function mostrarUbicacionUsuario() {
 
       // Guarda posición global para cálculos posteriores
       usuarioPosicion = { lat, lon };
+      cargarTecnicosPanel();
     },
     (err) => {
       alert("No se pudo obtener tu ubicación.");
